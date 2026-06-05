@@ -1,28 +1,31 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-import type { AuthUser } from '@/lib/auth'
-import { registerUser, loginUser, logoutUser, getCurrentUser } from '@/lib/auth'
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { loginUser, logoutUser, registerUser, getCurrentUser } from '@/lib/auth'
+import type { AuthUser, UserRole } from '@/lib/auth'
 
 interface AuthContextType {
   user: AuthUser | null
   isAuthenticated: boolean
   isAdmin: boolean
-  register: (userData: Omit<AuthUser, 'id' | 'refNumber' | 'createdAt'>) => AuthUser
-  login: (username: string, password: string) => AuthUser | null
+  login: (email: string, password: string) => AuthUser | null
   logout: () => void
+  register: (data: Omit<AuthUser, 'id' | 'refNumber' | 'status'> & { role: UserRole }) => AuthUser | null
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(getCurrentUser)
+  const [user, setUser] = useState<AuthUser | null>(getCurrentUser())
 
-  const register = useCallback((userData: Omit<AuthUser, 'id' | 'refNumber' | 'createdAt'>) => {
-    const newUser = registerUser(userData)
-    return newUser
+  useEffect(() => {
+    const handleStorage = () => {
+      setUser(getCurrentUser())
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
   }, [])
 
-  const login = useCallback((username: string, password: string) => {
-    const loggedInUser = loginUser(username, password)
+  const login = useCallback((email: string, password: string) => {
+    const loggedInUser = loginUser(email, password)
     if (loggedInUser) {
       setUser(loggedInUser)
     }
@@ -34,13 +37,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [])
 
+  const register = useCallback(
+    (data: Omit<AuthUser, 'id' | 'refNumber' | 'status'> & { role: UserRole }) => {
+      const newUser = registerUser(data)
+      setUser(newUser)
+      return newUser
+    },
+    [],
+  )
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
-    register,
     login,
     logout,
+    register,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

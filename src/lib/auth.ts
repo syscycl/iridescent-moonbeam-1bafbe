@@ -2,130 +2,114 @@ export type UserRole = 'household' | 'volunteer' | 'sponsor' | 'admin'
 
 export interface AuthUser {
   id: string
-  refNumber: string
+  email: string
   role: UserRole
+  refNumber: string
   fullName: string
   phone: string
-  email: string
-  address: string
+  password: string
+  securityQuestion: string
+  securityAnswer: string
   mapPinUrl?: string
+  address: string
   preferredPickupDay?: string
-  dayTime?: string
   source?: string
   remarks?: string
-  createdAt: string
-  // Role-specific fields
+  email_contact?: string
+  status: 'active' | 'pending'
+  // volunteer-specific
   availableDays?: string[]
   tShirtSize?: string
   emergencyContact?: string
+  // sponsor-specific
   sponsorType?: string
   contributionInterest?: string
   sponsorMessage?: string
 }
 
-export interface AdminCredentials {
-  username: string
-  password: string
+const ROLE_PREFIXES: Record<UserRole, string> = {
+  household: 'SYC-H',
+  volunteer: 'SYC-V',
+  sponsor: 'SYC-SP',
+  admin: 'SYC-ADMIN',
 }
 
-const ADMIN_KEY = 'syscycl_admin'
-const USERS_KEY = 'syscycl_users'
-
-function generateRefNumber(): string {
-  const prefix = 'SYS'
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-  const timestamp = Date.now().toString(36).substring(-4).toUpperCase()
-  return `${prefix}-${random}-${timestamp}`
+export function generateRefNumber(role: UserRole): string {
+  const prefix = ROLE_PREFIXES[role]
+  const num = Math.floor(1000 + Math.random() * 9000)
+  return `${prefix}-${num}`
 }
 
-export function getUsers(): AuthUser[] {
+export function registerUser(
+  data: Omit<AuthUser, 'id' | 'refNumber' | 'status'> & { role: UserRole },
+): AuthUser {
+  const users = getAllUsers()
+  const newUser: AuthUser = {
+    ...data as any,
+    id: crypto.randomUUID(),
+    refNumber: generateRefNumber(data.role),
+    status: 'active',
+  }
+  users.push(newUser)
+  localStorage.setItem('syscycl_users', JSON.stringify(users))
+  return newUser
+}
+
+export function getAllUsers(): AuthUser[] {
   try {
-    const data = localStorage.getItem(USERS_KEY)
-    return data ? JSON.parse(data) : []
+    return JSON.parse(localStorage.getItem('syscycl_users') || '[]')
   } catch {
     return []
   }
 }
 
-export function getUserByRefNumber(refNumber: string): AuthUser | undefined {
-  const users = getUsers()
-  return users.find((u) => u.refNumber === refNumber)
-}
-
-export function registerUser(userData: Omit<AuthUser, 'id' | 'refNumber' | 'createdAt'>): AuthUser {
-  const users = getUsers()
-  const newUser: AuthUser = {
-    ...userData as any,
-    id: crypto.randomUUID(),
-    refNumber: generateRefNumber(),
-    createdAt: new Date().toISOString(),
-  }
-  users.push(newUser)
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
-  return newUser
-}
-
-export function loginUser(username: string, password: string): AuthUser | null {
-  const adminData = localStorage.getItem(ADMIN_KEY)
-  if (!adminData) {
-    // Auto-seed admin if not exists
-    seedAdminUser()
-    return loginUser(username, password)
-  }
-
-  const admin: AdminCredentials & { refNumber: string; fullName: string } = JSON.parse(adminData)
-  if (admin.username === username && admin.password === password) {
-    const adminUser: AuthUser = {
-      id: 'admin-1',
-      refNumber: admin.refNumber,
+export function seedAdminUser(): void {
+  const users = getAllUsers()
+  if (!users.find((u) => u.email === 'tanisha@syscycl.com')) {
+    registerUser({
       role: 'admin',
-      fullName: admin.fullName,
+      fullName: 'Tanisha',
+      email: 'tanisha@syscycl.com',
       phone: '',
-      email: '',
+      password: 'Syscycl2026!',
+      securityQuestion: '',
+      securityAnswer: '',
       address: '',
-      createdAt: new Date().toISOString(),
-    }
-    localStorage.setItem('syscycl_current_user', JSON.stringify(adminUser))
-    return adminUser
+      preferredPickupDay: '',
+      source: '',
+      remarks: '',
+      status: 'active',
+    } as any)
   }
-  return null
+}
+
+export function loginUser(email: string, password: string): AuthUser | null {
+  seedAdminUser()
+  const user = getAllUsers().find((u) => u.email === email && u.password === password)
+  if (!user) return null
+  const session = {
+    userId: user.id,
+    role: user.role,
+    token: crypto.randomUUID(),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  }
+  localStorage.setItem('syscycl_session', JSON.stringify(session))
+  return user
 }
 
 export function logoutUser(): void {
-  localStorage.removeItem('syscycl_current_user')
+  localStorage.removeItem('syscycl_session')
 }
 
 export function getCurrentUser(): AuthUser | null {
   try {
-    const data = localStorage.getItem('syscycl_current_user')
-    return data ? JSON.parse(data) : null
+    const session = JSON.parse(localStorage.getItem('syscycl_session') || 'null')
+    if (!session || new Date(session.expiresAt) < new Date()) {
+      logoutUser()
+      return null
+    }
+    return getAllUsers().find((u) => u.id === session.userId) || null
   } catch {
     return null
-  }
-}
-
-export function seedAdminUser(): void {
-  const existing = localStorage.getItem(ADMIN_KEY)
-  if (!existing) {
-    localStorage.setItem(
-      ADMIN_KEY,
-      JSON.stringify({
-        username: 'tanisha',
-        password: 'admin123',
-        refNumber: 'SYS-ADMIN-001',
-        fullName: 'Tanisha (Admin)',
-      }),
-    )
-  }
-}
-
-// Stats helpers
-export function getRegistrationStats() {
-  const users = getUsers().filter((u) => u.role !== 'admin')
-  return {
-    total: users.length,
-    households: users.filter((u) => u.role === 'household').length,
-    volunteers: users.filter((u) => u.role === 'volunteer').length,
-    sponsors: users.filter((u) => u.role === 'sponsor').length,
   }
 }
