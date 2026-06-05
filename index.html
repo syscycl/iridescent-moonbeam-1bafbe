@@ -19,8 +19,7 @@
     <meta name="twitter:title" content="Happy World Environment Day - Join Syscycl!" />
     <meta name="twitter:description" content="Free door-to-door PET bottle recycling in Brantford. Student BIZ initiative." />
     <meta name="twitter:image" content="https://syscycl.com/world-environment-day-popup.jpg" />
-    <script type="module" crossorigin src="./assets/index-BMkbsnEV.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CHXtx0V7.css">
+    <script type="module" crossorigin src="/src/main.tsx"></script>
   </head>
   <body>
     <div id="root"></div>
@@ -28,7 +27,7 @@
     <!-- World Environment Day Bumper Ad Popup -->
     <div id="wed-popup" class="wed-popup-overlay">
       <div class="wed-popup-container">
-        <button class="wed-popup-close" aria-label="Close popup" onclick="closeWedPopup()">&times;</button>
+        <button class="wed-popup-close" id="wed-close-btn" aria-label="Close popup">&times;</button>
 
         <video
           id="wed-video"
@@ -38,7 +37,6 @@
           muted
           playsinline
           webkit-playsinline
-          poster="./wed-mascot.jpg"
         ></video>
 
         <div class="wed-popup-cta" id="wed-cta">
@@ -50,10 +48,10 @@
           </svg>
           <h2>Happy World Environment Day</h2>
           <p>Join Syscycl in making Brantford plastic-free</p>
-          <a href="./#/register" class="wed-popup-btn" onclick="closeWedPopup()">Join the Movement</a>
+          <a href="./#/register" class="wed-popup-btn" id="wed-cta-btn">Join the Movement</a>
         </div>
 
-        <button class="wed-skip-btn" id="wed-skip" onclick="closeWedPopup()">Skip Ad</button>
+        <button class="wed-skip-btn" id="wed-skip">Skip Ad</button>
       </div>
     </div>
 
@@ -122,6 +120,7 @@
         height: 100%;
         object-fit: cover;
         display: block;
+        background: #000;
         transform: translateZ(0);
         will-change: transform;
       }
@@ -241,6 +240,9 @@
         var video = document.getElementById("wed-video");
         var cta = document.getElementById("wed-cta");
         var skip = document.getElementById("wed-skip");
+        var closeBtn = document.getElementById("wed-close-btn");
+        var ctaBtn = document.getElementById("wed-cta-btn");
+        var hasEnded = false;
 
         function closeWedPopup() {
           video.pause();
@@ -253,40 +255,68 @@
           }, 500);
         }
 
+        // FIX #1: Expose close function globally for onclick handlers
+        window.closeWedPopup = closeWedPopup;
+
+        // FIX #2: Use addEventListener instead of onclick attributes
+        closeBtn.addEventListener("click", function(e) {
+          e.stopPropagation();
+          closeWedPopup();
+        });
+        skip.addEventListener("click", function(e) {
+          e.stopPropagation();
+          closeWedPopup();
+        });
+        ctaBtn.addEventListener("click", function(e) {
+          // Let the link navigate, but close popup first
+          closeWedPopup();
+        });
         popup.addEventListener("click", function(e) {
           if (e.target === popup) closeWedPopup();
         });
 
-        // Pre-load video immediately so it's ready when popup shows
-        video.preload = "auto";
+        // FIX #3: Aggressive autoplay with retry
+        function playVideo() {
+          var p = video.play();
+          if (p !== undefined) {
+            p.then(function() {
+              // Video is playing successfully
+            }).catch(function(err) {
+              // Autoplay blocked - show CTA immediately
+              cta.classList.add("show");
+            });
+          }
+        }
+
+        // Pre-load video immediately
         video.load();
 
         setTimeout(function() {
           popup.classList.add("active");
           sessionStorage.setItem("wedPopupV3Shown", "true");
 
-          function tryPlay() {
-            video.play().catch(function() {
-              cta.classList.add("show");
-            });
-          }
-
+          // Try playing - multiple attempts
           if (video.readyState >= 2) {
-            tryPlay();
+            playVideo();
           } else {
-            video.addEventListener("canplay", tryPlay, { once: true });
-            setTimeout(tryPlay, 1200);
+            video.addEventListener("canplay", function() {
+              playVideo();
+            }, { once: true });
           }
 
+          // Show skip button after 2s
           setTimeout(function() {
             skip.classList.add("show");
           }, 2000);
 
+          // Show CTA when video ends
           video.addEventListener("ended", function() {
+            hasEnded = true;
             cta.classList.add("show");
             setTimeout(closeWedPopup, 4000);
           }, { once: true });
 
+          // Safety timeout: close after 20s
           setTimeout(closeWedPopup, 20000);
         }, 3000);
       })();
