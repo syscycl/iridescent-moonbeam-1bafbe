@@ -79,6 +79,20 @@ export default function ChatPage() {
       replies: [],
     }
     saveMessage(newMsg)
+
+    // Send notification to Tanisha via Formspree
+    import('@/lib/notifications').then(({ sendNotification, getCurrentTimestamp }) => {
+      sendNotification({
+        type: 'chat',
+        name: newMsg.name,
+        phone: newMsg.phone,
+        email: newMsg.email || undefined,
+        message: newMsg.message,
+        details: `Interest: ${newMsg.interestType} | Chat ID: ${newMsg.id}`,
+        timestamp: getCurrentTimestamp(),
+      })
+    })
+
     setChatId(newMsg.id)
     setSubmitted(true)
   }

@@ -45,6 +45,10 @@ export default function LoginPage() {
           <div className="text-center mb-6">
             <h1 className="text-2xl font-semibold text-[#111827]">Welcome Back</h1>
             <p className="text-sm text-[#6b7280] mt-1">Log in to your Syscycl account</p>
+            <div className="mt-2 inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <span className="text-xs text-amber-700 font-medium">Management login only</span>
+            </div>
           </div>
 
           {error && (

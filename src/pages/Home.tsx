@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import LiveAnalyticsTicker from '../components/LiveAnalyticsTicker'
 import {
   Leaf, ClipboardList, Calendar, DoorOpen, TrendingUp,
   Home as HomeIcon, HeartHandshake, Building2, CheckCircle2,
   Mail, MapPin, Instagram, ArrowRight,
+  Heart, GraduationCap, BookOpen, BarChart3,
 } from 'lucide-react'
 
 const fadeUp = {
@@ -25,6 +27,7 @@ export default function Home() {
 
   return (
     <div>
+      <LiveAnalyticsTicker />
       {/* Section 1: Hero */}
       <section ref={heroRef} className="min-h-[80vh] bg-gradient-to-b from-white to-[#f0fdf4] py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -183,6 +186,60 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Section 3.5: Our Story + YouTube */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Story Text */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ duration: 0.5 }}>
+              <div className="inline-flex items-center gap-2 bg-[#f0fdf4] border border-[#bbf7d0] rounded-full px-4 py-1.5 mb-6">
+                <Heart className="w-4 h-4 text-[#16a34a]" />
+                <span className="text-sm text-[#15803d] font-medium">Our Story</span>
+              </div>
+              <h2 className="text-[30px] font-semibold text-[#111827] mb-4 leading-tight">Built by a Student, For the Community</h2>
+              <p className="text-[#374151] leading-relaxed mb-4">
+                Hi, I&apos;m Tanisha — a student at Assumption College Brantford. Syscycl started as my co-op entrepreneurship project, but it&apos;s grown into something I truly believe can help our city.
+              </p>
+              <p className="text-[#374151] leading-relaxed mb-4">
+                I noticed that while Brantford has recycling programs, many people — especially in apartments and townhomes — find it inconvenient to sort and transport their plastic bottles. That&apos;s where Syscycl comes in.
+              </p>
+              <p className="text-[#374151] leading-relaxed mb-6">
+                We pick up your PET bottles door-to-door, sort and process them, and deliver them to local recyclers right here in Brantford. Every bottle we collect is one less in a landfill.
+              </p>
+              <blockquote className="border-l-4 border-[#16a34a] pl-4 italic text-[#374151] bg-[#f0fdf4] p-4 rounded-r-lg">
+                &ldquo;Our mission is to make recycling effortless for Brantford residents while building a sustainable, community-driven business that proves student entrepreneurs can make a real difference.&rdquo;
+              </blockquote>
+              <p className="text-sm text-[#6b7280] mt-3 flex items-center gap-2">
+                <GraduationCap className="w-4 h-4" />
+                Assumption College Brantford Co-op 2026
+              </p>
+            </motion.div>
+
+            {/* Right: YouTube Video */}
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+              <div className="bg-white rounded-xl border border-[#e5e7eb] shadow-sm overflow-hidden">
+                <div className="bg-[#f9fafb] px-4 py-3 border-b border-[#e5e7eb]">
+                  <p className="text-sm font-medium text-[#111827]">&ldquo;The Nature&rdquo; — by Tasleem Khan</p>
+                  <p className="text-xs text-[#6b7280]">An award-winning short film on humanity&apos;s impact on the environment</p>
+                </div>
+                <div className="aspect-video bg-[#111827]">
+                  <iframe
+                    className="w-full h-full"
+                    src="https://www.youtube.com/embed/a5g4UoW9uzI?rel=0"
+                    title="The Nature by Tasleem Khan"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-[#9ca3af] mt-2 text-center">
+                Tanisha&apos;s father Tasleem Khan is an acclaimed filmmaker and environmental advocate.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Section 4: 3-Role CTA */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#f0fdf4]">
         <div className="max-w-7xl mx-auto">
@@ -337,6 +394,81 @@ export default function Home() {
               Send us a Message
             </button>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Section: Research & Education */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#f0fdf4] to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ duration: 0.5 }}>
+              <div className="inline-flex items-center gap-2 bg-[#16a34a]/10 border border-[#16a34a]/20 rounded-full px-4 py-1.5 mb-4">
+                <BookOpen className="w-4 h-4 text-[#16a34a]" />
+                <span className="text-sm text-[#15803d] font-medium">Free Educational Resource</span>
+              </div>
+              <h2 className="text-[30px] font-semibold text-[#111827] mb-4 leading-tight">The Economics of PET Recycling: A Student Research Study</h2>
+              <p className="text-[#374151] leading-relaxed mb-4">
+                Did you know that only 9% of all plastic ever produced has been recycled? This comprehensive research paper explores the economic and environmental impact of PET bottle recycling — from collection to reprocessing.
+              </p>
+              <div className="space-y-3 mb-6">
+                {[
+                  'Detailed kg-based economic model for Brantford',
+                  'Unit economics: $0.045 revenue per bottle, 55% margin',
+                  'Break-even analysis: 54 households needed',
+                  'Environmental impact: 3 kg CO2e saved per kg recycled',
+                  'Feasibility assessment with financial projections',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#16a34a] mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-[#374151]">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => navigate('/research')} className="px-5 py-2.5 bg-[#16a34a] text-white rounded-lg font-medium hover:bg-[#15803d] transition-colors flex items-center gap-2">
+                  View Both Research Papers
+                </button>
+                <button onClick={() => navigate('/research')} className="px-5 py-2.5 bg-white text-[#374151] border border-[#e5e7eb] rounded-lg font-medium hover:bg-[#f9fafb] transition-colors">
+                  Read & Share Infographics
+                </button>
+              </div>
+              <p className="text-xs text-[#9ca3af] mt-3">An Assumption College School (Student BIZ) Initiative. Download is free for educational purposes.</p>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="relative">
+              <div className="bg-white rounded-xl border border-[#e5e7eb] shadow-lg overflow-hidden">
+                <div className="bg-[#111827] px-6 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#16a34a] flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium text-sm">Syscycl Research Series</p>
+                      <p className="text-white/60 text-xs">Issue #1 — June 2026</p>
+                    </div>
+                  </div>
+                  <span className="text-[#16a34a] text-xs font-medium bg-[#16a34a]/20 px-2 py-1 rounded">FREE</span>
+                </div>
+                <div className="p-6 space-y-4">
+                  {[
+                    { label: 'Bottles per pickup', value: '75-150' },
+                    { label: 'Revenue per bottle', value: '$0.045', h: true },
+                    { label: 'Profit margin', value: '55%', h: true },
+                    { label: 'Break-even households', value: '54' },
+                    { label: 'CO2 saved per kg recycled', value: '3 kg CO2e', h: true },
+                  ].map((row) => (
+                    <div key={row.label} className="flex items-center justify-between py-2 border-b border-[#e5e7eb] last:border-0">
+                      <span className="text-sm text-[#6b7280]">{row.label}</span>
+                      <span className={`text-sm font-semibold ${row.h ? 'text-[#16a34a]' : 'text-[#111827]'}`}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-6 py-3 bg-[#f9fafb] border-t border-[#e5e7eb]">
+                  <p className="text-xs text-[#6b7280] text-center">Based on EPA WARM Model and local Brantford recycler pricing</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
     </div>

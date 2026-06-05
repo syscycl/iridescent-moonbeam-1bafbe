@@ -7,12 +7,13 @@ export interface AuthUser {
   refNumber: string
   fullName: string
   phone: string
-  password: string
-  securityQuestion: string
-  securityAnswer: string
+  password?: string
+  securityQuestion?: string
+  securityAnswer?: string
   mapPinUrl?: string
   address: string
   preferredPickupDay?: string
+  dayTime?: string
   source?: string
   remarks?: string
   email_contact?: string

@@ -4,9 +4,10 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import Home from '@/pages/Home'
 import RegisterPage from '@/pages/RegisterPage'
 import LoginPage from '@/pages/LoginPage'
-import ForgotPassword from '@/pages/ForgotPassword'
+
 import ImpactCalculator from '@/pages/ImpactCalculator'
 import InnovationsLibrary from '@/pages/InnovationsLibrary'
+import ResearchPapers from '@/pages/ResearchPapers'
 import Gallery from '@/pages/Gallery'
 import ChatPage from '@/pages/ChatPage'
 import ChatLog from '@/pages/ChatLog'
@@ -28,9 +29,10 @@ export default function App() {
         <Route path="/signup" element={<Navigate to="/register" replace />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+
         <Route path="/impact" element={<ImpactCalculator />} />
         <Route path="/innovations" element={<InnovationsLibrary />} />
+        <Route path="/research" element={<ResearchPapers />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/social" element={<SocialFeed />} />
