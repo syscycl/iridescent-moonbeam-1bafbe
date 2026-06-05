@@ -25,32 +25,33 @@ interface Paper {
 
 const papers: Paper[] = [
   {
-    id: 'economics',
-    title: 'The Economics of PET Recycling',
-    subtitle: 'A Student Research Study',
+    id: 'legacy',
+    title: 'The 450-Year Legacy',
+    subtitle: 'The Environmental Impact of PET Bottles',
     issue: 'Issue #1 — June 2026',
     color: '#16a34a',
     bgColor: '#f0fdf4',
-    heroImage: '/research-paper-1-economics.png',
-    shareableImage: '/research-shareable-1.png',
-    pdfUrl: '/downloads/research-paper-1-economics.pdf',
-    description: 'A comprehensive kg-based economic model for door-to-door PET bottle collection in Brantford, Ontario. This study analyzes unit economics, break-even points, and environmental impact of community recycling programs.',
+    heroImage: '/research-paper-1-legacy.png',
+    shareableImage: '/research-shareable-1-legacy.png',
+    pdfUrl: '/downloads/research-paper-1-legacy.pdf',
+    description: 'A plastic bottle tossed today will still be sitting in a landfill in the year 2476. This student research paper examines the long-term environmental consequences of PET plastic waste on Brantford soil, water, and wildlife — and what communities can do to reverse the damage.',
     keyStats: [
-      { label: 'Revenue per bottle', value: '$0.045', icon: BarChart3, highlight: true },
-      { label: 'Profit margin', value: '55%', icon: BarChart3, highlight: true },
-      { label: 'Break-even households', value: '54', icon: Heart },
-      { label: 'CO2 saved per kg', value: '3 kg CO2e', icon: BarChart3, highlight: true },
+      { label: 'Time to decompose', value: '450 years', icon: Heart, highlight: true },
+      { label: 'Plastic recycled', value: 'Only 9%', icon: AlertTriangle, highlight: true },
+      { label: 'Bottles per Canadian', value: '167/year', icon: BarChart3 },
+      { label: 'CO2 per kg recycled', value: '3 kg saved', icon: Heart, highlight: true },
     ],
     sources: [
-      { name: 'EPA WARM Model', url: 'https://www.epa.gov/warm' },
-      { name: 'Canadian Plastics Industry Association', url: 'https://www.plastics.ca' },
-      { name: 'Brantford Municipal Waste Data', url: 'https://www.brantford.ca' },
+      { name: 'University of Calgary PET Study', url: 'https://www.ucalgary.ca' },
+      { name: 'Nature Journal — Plastic Persistence', url: 'https://www.nature.com' },
+      { name: 'Environment and Climate Change Canada', url: 'https://www.canada.ca/environment' },
+      { name: 'WHO Environmental Health', url: 'https://www.who.int' },
     ],
     actions: [
-      'Door-to-door PET bottle collection from registered households',
-      'Sorting and compression at centralized facility',
-      'Sale to local recycling partners at market rates',
-      'Track every kg for transparent impact reporting',
+      'Participate in door-to-door PET bottle collection programs',
+      'Replace single-use bottles with refillable containers',
+      'Support local recycling initiatives like Syscycl',
+      'Educate your community about the 450-year legacy',
     ],
   },
   {
@@ -196,7 +197,7 @@ export default function ResearchPapers() {
             className="mb-8"
           >
             <h3 className="text-lg font-semibold text-[#111827] mb-4">
-              {paper.id === 'economics' ? 'How the Model Works' : 'What You Can Do'}
+              {paper.id === 'legacy' ? 'The 450-Year Problem' : 'What You Can Do'}
             </h3>
             <div className="space-y-3">
               {paper.actions.map((action, i) => (

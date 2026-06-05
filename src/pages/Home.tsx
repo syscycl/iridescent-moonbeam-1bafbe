@@ -406,17 +406,17 @@ export default function Home() {
                 <BookOpen className="w-4 h-4 text-[#16a34a]" />
                 <span className="text-sm text-[#15803d] font-medium">Free Educational Resource</span>
               </div>
-              <h2 className="text-[30px] font-semibold text-[#111827] mb-4 leading-tight">The Economics of PET Recycling: A Student Research Study</h2>
+              <h2 className="text-[30px] font-semibold text-[#111827] mb-4 leading-tight">The 450-Year Legacy: The Environmental Impact of PET Bottles</h2>
               <p className="text-[#374151] leading-relaxed mb-4">
-                Did you know that only 9% of all plastic ever produced has been recycled? This comprehensive research paper explores the economic and environmental impact of PET bottle recycling — from collection to reprocessing.
+                A plastic bottle tossed today will still be sitting in a landfill in the year 2476. This student research paper explores the long-term environmental consequences of PET plastic waste and what communities can do about it.
               </p>
               <div className="space-y-3 mb-6">
                 {[
-                  'Detailed kg-based economic model for Brantford',
-                  'Unit economics: $0.045 revenue per bottle, 55% margin',
-                  'Break-even analysis: 54 households needed',
-                  'Environmental impact: 3 kg CO2e saved per kg recycled',
-                  'Feasibility assessment with financial projections',
+                  'The science behind why PET bottles take 450 years to decompose',
+                  'How discarded bottles impact Brantford soil and water systems',
+                  'The connection between microplastics and human health',
+                  'Community action: What students and households can do',
+                  'Second research paper: Microplastics and the food chain',
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#16a34a] mt-0.5 flex-shrink-0" />
@@ -426,7 +426,7 @@ export default function Home() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <button onClick={() => navigate('/research')} className="px-5 py-2.5 bg-[#16a34a] text-white rounded-lg font-medium hover:bg-[#15803d] transition-colors flex items-center gap-2">
-                  View Both Research Papers
+                  View Research Papers
                 </button>
                 <button onClick={() => navigate('/research')} className="px-5 py-2.5 bg-white text-[#374151] border border-[#e5e7eb] rounded-lg font-medium hover:bg-[#f9fafb] transition-colors">
                   Read & Share Infographics
@@ -444,18 +444,18 @@ export default function Home() {
                     </div>
                     <div>
                       <p className="text-white font-medium text-sm">Syscycl Research Series</p>
-                      <p className="text-white/60 text-xs">Issue #1 — June 2026</p>
+                      <p className="text-white/60 text-xs">Environmental Studies</p>
                     </div>
                   </div>
                   <span className="text-[#16a34a] text-xs font-medium bg-[#16a34a]/20 px-2 py-1 rounded">FREE</span>
                 </div>
                 <div className="p-6 space-y-4">
                   {[
-                    { label: 'Bottles per pickup', value: '75-150' },
-                    { label: 'Revenue per bottle', value: '$0.045', h: true },
-                    { label: 'Profit margin', value: '55%', h: true },
-                    { label: 'Break-even households', value: '54' },
-                    { label: 'CO2 saved per kg recycled', value: '3 kg CO2e', h: true },
+                    { label: 'Paper #1', value: 'The 450-Year Legacy', h: true },
+                    { label: 'Focus', value: 'Environmental impact of PET' },
+                    { label: 'Decomposition time', value: '450 years', h: true },
+                    { label: 'Paper #2', value: 'Microplastics Threat', h: true },
+                    { label: 'Focus', value: 'Microplastics in food chain' },
                   ].map((row) => (
                     <div key={row.label} className="flex items-center justify-between py-2 border-b border-[#e5e7eb] last:border-0">
                       <span className="text-sm text-[#6b7280]">{row.label}</span>
@@ -464,7 +464,7 @@ export default function Home() {
                   ))}
                 </div>
                 <div className="px-6 py-3 bg-[#f9fafb] border-t border-[#e5e7eb]">
-                  <p className="text-xs text-[#6b7280] text-center">Based on EPA WARM Model and local Brantford recycler pricing</p>
+                  <p className="text-xs text-[#6b7280] text-center">Purely environmental focus — no commercial or profit content</p>
                 </div>
               </div>
             </motion.div>
