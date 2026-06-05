@@ -1,28 +1,32 @@
 import { useState, useEffect } from 'react'
-import { Building2, Recycle, Users, Leaf } from 'lucide-react'
+import { Recycle, Users, Leaf, TrendingUp } from 'lucide-react'
 
-const COUNT_API_NS = 'syscycl-website'
+// ============================================================
+// LIVE ANALYTICS TICKER - Uses CountAPI for REAL visit tracking
+// Each count reflects ACTUAL website interactions, not estimates
+// ============================================================
 
-interface Stats {
-  households: number
-  bottles: number
-  volunteers: number
-  communities: number
+const COUNT_API_NS = 'syscycl-live'
+
+interface LiveStats {
+  websiteVisits: number    // Actual unique website visits (auto-incremented)
+  bottlesCollected: number  // Bottles physically collected (manually updated)
+  activeVolunteers: number  // Registered volunteers (manually updated)
+  co2Saved: number          // KG of CO2 saved from recycling
 }
 
-// Historical cumulative baseline data (established since launch)
-// These are the REAL starting points. CountAPI increments from here.
-const HISTORICAL_BASELINE: Stats = {
-  households: 47,    // 47 households registered since launch
-  bottles: 2843,     // 2,843 bottles collected to date
-  volunteers: 12,    // 12 student volunteers
-  communities: 3,    // 3 Brantford neighbourhoods covered
+// Starting baselines - these are REAL operational numbers to date.
+// When CountAPI returns a value, we use that. Otherwise fall back.
+const BASELINE: LiveStats = {
+  websiteVisits: 0,      // Starts at 0, auto-increments on each visit
+  bottlesCollected: 0,   // Starts at 0, manually updated as ops begin
+  activeVolunteers: 0,   // Starts at 0, manually updated
+  co2Saved: 0,           // Starts at 0, calculated: bottles * 0.05kg CO2 per bottle
 }
 
-const STORAGE_KEY = 'syscycl-ticker-data'
-const LAST_FETCH_KEY = 'syscycl-ticker-last-fetch'
+const STORAGE_KEY = 'syscycl-live-stats-v3'
 
-function loadStoredStats(): Stats | null {
+function loadStored(): LiveStats | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw)
@@ -30,18 +34,19 @@ function loadStoredStats(): Stats | null {
   return null
 }
 
-function saveStats(stats: Stats) {
+function saveStored(stats: LiveStats) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stats))
-  localStorage.setItem(LAST_FETCH_KEY, Date.now().toString())
 }
 
 async function getCount(key: string): Promise<number | null> {
   try {
     const res = await fetch(`https://api.counterapi.dev/v1/${COUNT_API_NS}/${key}`, {
       headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
     })
+    if (!res.ok) return null
     const data = await res.json()
-    return data.count ?? null
+    return typeof data.count === 'number' ? data.count : null
   } catch {
     return null
   }
@@ -52,101 +57,121 @@ async function incrementCount(key: string): Promise<number | null> {
     const res = await fetch(`https://api.counterapi.dev/v1/${COUNT_API_NS}/${key}/up`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
     })
+    if (!res.ok) return null
     const data = await res.json()
-    return data.count ?? null
+    return typeof data.count === 'number' ? data.count : null
   } catch {
     return null
   }
 }
 
-// Seed CountAPI with baseline values (run once)
-async function seedCounters() {
-  if (localStorage.getItem('syscycl-seeded-v2')) return
-  localStorage.setItem('syscycl-seeded-v2', 'true')
-
-  const keys: (keyof Stats)[] = ['households', 'bottles', 'volunteers', 'communities']
-  for (const key of keys) {
-    const target = HISTORICAL_BASELINE[key]
-    // Fire-and-forget: seed in batches of 50 (API limit workaround)
-    for (let batch = 0; batch < Math.ceil(target / 50); batch++) {
-      const count = Math.min(50, target - batch * 50)
-      for (let i = 0; i < count; i++) {
-        fetch(`https://api.counterapi.dev/v1/${COUNT_API_NS}/${key}/up`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        }).catch(() => {})
-      }
-    }
-  }
-}
-
 export default function LiveAnalyticsTicker() {
-  const [stats, setStats] = useState<Stats>(() => {
-    // Try stored first, then fall back to baseline
-    return loadStoredStats() ?? { ...HISTORICAL_BASELINE }
-  })
+  const [stats, setStats] = useState<LiveStats>(() => loadStored() ?? { ...BASELINE })
 
-  // Increment "households" counter on each unique visit (once per session)
+  // On mount: increment websiteVisits (one per session)
   useEffect(() => {
-    seedCounters()
+    if (sessionStorage.getItem('syscycl-visiting')) return
+    sessionStorage.setItem('syscycl-visiting', 'true')
 
-    if (!sessionStorage.getItem('syscycl-visit-counted')) {
-      sessionStorage.setItem('syscycl-visit-counted', 'true')
-      incrementCount('households').then((count) => {
-        if (count !== null) {
-          const updated = { ...stats, households: count }
-          setStats(updated)
-          saveStats(updated)
-        }
-      })
-    }
+    incrementCount('websiteVisits').then((count) => {
+      if (count !== null) {
+        setStats(prev => {
+          const updated = { ...prev, websiteVisits: count }
+          saveStored(updated)
+          return updated
+        })
+      }
+    })
   }, [])
 
-  // Auto-refresh: fetch latest counts every 30 seconds
+  // Auto-refresh all counters every 30 seconds
   useEffect(() => {
     async function refresh() {
-      const [h, b, v, c] = await Promise.all([
-        getCount('households'),
-        getCount('bottles'),
-        getCount('volunteers'),
-        getCount('communities'),
+      const [visits, bottles, volunteers] = await Promise.all([
+        getCount('websiteVisits'),
+        getCount('bottlesCollected'),
+        getCount('activeVolunteers'),
       ])
 
-      // Only update if CountAPI returned real values
-      const updated: Stats = {
-        households: h ?? stats.households,
-        bottles: b ?? stats.bottles,
-        volunteers: v ?? stats.volunteers,
-        communities: c ?? stats.communities,
-      }
-
-      setStats(updated)
-      saveStats(updated)
+      setStats(prev => {
+        const updated: LiveStats = {
+          websiteVisits: visits ?? prev.websiteVisits,
+          bottlesCollected: bottles ?? prev.bottlesCollected,
+          activeVolunteers: volunteers ?? prev.activeVolunteers,
+          co2Saved: (bottles ?? prev.bottlesCollected) * 0.05, // ~50g CO2 per PET bottle
+        }
+        saveStored(updated)
+        return updated
+      })
     }
 
-    refresh() // immediate first refresh
-    const timer = setInterval(refresh, 30000) // every 30s
+    refresh()
+    const timer = setInterval(refresh, 30000)
     return () => clearInterval(timer)
   }, [])
 
   const items = [
-    { icon: Building2, label: 'Households', value: stats.households, color: 'text-blue-400' },
-    { icon: Recycle, label: 'Bottles', value: stats.bottles, color: 'text-green-400' },
-    { icon: Users, label: 'Volunteers', value: stats.volunteers, color: 'text-orange-400' },
-    { icon: Leaf, label: 'Communities', value: stats.communities, color: 'text-emerald-400' },
+    {
+      icon: TrendingUp,
+      label: 'Total Visits',
+      value: stats.websiteVisits,
+      desc: 'People who visited syscycl.com',
+      color: 'text-blue-400',
+    },
+    {
+      icon: Recycle,
+      label: 'Bottles Collected',
+      value: stats.bottlesCollected,
+      desc: 'PET bottles physically collected',
+      color: 'text-green-400',
+    },
+    {
+      icon: Users,
+      label: 'Volunteers',
+      value: stats.activeVolunteers,
+      desc: 'Registered student volunteers',
+      color: 'text-orange-400',
+    },
+    {
+      icon: Leaf,
+      label: 'CO2 Saved (kg)',
+      value: Math.round(stats.co2Saved * 10) / 10,
+      desc: 'Kilograms of CO2 prevented',
+      color: 'text-emerald-400',
+    },
   ]
 
   return (
-    <div className="bg-gradient-to-r from-green-900 via-green-800 to-green-900 text-white py-2.5 overflow-hidden">
-      <div className="flex items-center justify-center gap-4 sm:gap-8 px-4 flex-nowrap">
-        {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-1.5 text-sm whitespace-nowrap">
-            <item.icon className={`w-4 h-4 ${item.color}`} />
-            <span className="text-green-200 text-xs hidden sm:inline">{item.label}:</span>
-            <span className="font-bold tabular-nums">{item.value.toLocaleString()}</span>
-          </div>
-        ))}
+    <div className="bg-gradient-to-r from-green-900 via-green-800 to-green-900 text-white py-2.5">
+      <div className="max-w-6xl mx-auto px-4">
+        {/* Desktop: horizontal row */}
+        <div className="hidden sm:flex items-center justify-center gap-6">
+          {items.map((item) => (
+            <div key={item.label} className="flex items-center gap-2" title={item.desc}>
+              <item.icon className={`w-4 h-4 ${item.color} flex-shrink-0`} />
+              <span className="text-green-200 text-xs">{item.label}:</span>
+              <span className="font-bold tabular-nums text-sm">{typeof item.value === 'number' && item.value < 1 ? item.value.toFixed(1) : item.value.toLocaleString()}</span>
+            </div>
+          ))}
+          <span className="text-green-400 text-xs ml-2">Updates live</span>
+        </div>
+
+        {/* Mobile: 2x2 grid */}
+        <div className="sm:hidden grid grid-cols-2 gap-x-4 gap-y-1.5">
+          {items.map((item) => (
+            <div key={item.label} className="flex items-center gap-1.5">
+              <item.icon className={`w-3.5 h-3.5 ${item.color} flex-shrink-0`} />
+              <div className="flex flex-col leading-tight">
+                <span className="text-green-300 text-[10px]">{item.label}</span>
+                <span className="font-bold tabular-nums text-xs">
+                  {typeof item.value === 'number' && item.value < 1 ? item.value.toFixed(1) : item.value.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
