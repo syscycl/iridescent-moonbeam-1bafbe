@@ -4,13 +4,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, Phone, Mail, MapPin, Calendar, HelpCircle,
   MessageSquare, CheckCircle2, Home, HeartHandshake,
-  Building2, Copy, Check,
+  Building2, Copy, Check, AlertTriangle, Send,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { sendNotification, getCurrentTimestamp } from '@/lib/notifications'
 import type { UserRole } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
 
 const SOURCE_OPTIONS = ['Instagram', 'Facebook', 'Friend', 'Flyer', 'Website', 'Other']
+
+// Formspree endpoint for sending registration details to admin
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xnjyngrb'
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams()
@@ -23,6 +27,9 @@ export default function RegisterPage() {
   const [registeredUser, setRegisteredUser] = useState<AuthUser | null>(null)
   const [copied, setCopied] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  // Track whether the user has sent their details to the admin via email
+  const [emailSent, setEmailSent] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   const [form, setForm] = useState({
     fullName: '', phone: '', email: '',
@@ -75,26 +82,72 @@ export default function RegisterPage() {
     const user = register(userData)
 
     if (user) {
-      // Send notification to Tanisha via Formspree
-      import('@/lib/notifications').then(({ sendNotification, getCurrentTimestamp }) => {
-        sendNotification({
-          type: user.role === 'sponsor' ? 'sponsor' : 'registration',
-          name: user.fullName,
-          phone: user.phone,
-          email: user.email,
-          details: `Role: ${user.role} | Ref: ${user.refNumber} | Address: ${user.address} | Source: ${user.source || 'N/A'}`,
-          timestamp: getCurrentTimestamp(),
-        })
+      // Send notification to Tanisha via Formspree using direct import
+      sendNotification({
+        type: user.role === 'sponsor' ? 'sponsor' : 'registration',
+        name: user.fullName,
+        phone: user.phone,
+        email: user.email,
+        details: `Role: ${user.role} | Ref: ${user.refNumber} | Address: ${user.address} | Source: ${user.source || 'N/A'}`,
+        timestamp: getCurrentTimestamp(),
       })
     }
 
     setRegisteredUser(user)
     setSubmitted(true)
+    setEmailSent(false)
+  }
+
+  // Send the full registration data to admin via Formspree.
+  // This ensures the admin receives an email even though localStorage is per-device.
+  const sendToAdmin = async () => {
+    if (!registeredUser) return
+    setSendingEmail(true)
+    try {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `Syscycl Registration from ${registeredUser.fullName} (${registeredUser.role})`,
+          _replyto: registeredUser.email || 'noreply@syscycl.com',
+          role: registeredUser.role,
+          refNumber: registeredUser.refNumber,
+          name: registeredUser.fullName,
+          phone: registeredUser.phone,
+          email: registeredUser.email || 'Not provided',
+          address: registeredUser.address,
+          mapPinUrl: form.mapPinUrl || 'Not provided',
+          dayTime: form.dayTime || 'Not provided',
+          source: form.source || 'Not provided',
+          remarks: form.remarks || 'None',
+          availableDays: form.availableDays.length > 0 ? form.availableDays.join(', ') : 'N/A',
+          tShirtSize: form.tShirtSize || 'N/A',
+          emergencyContact: form.emergencyContact || 'N/A',
+          sponsorType: form.sponsorType || 'N/A',
+          contributionInterest: form.contributionInterest || 'N/A',
+          sponsorMessage: form.sponsorMessage || 'N/A',
+          timestamp: getCurrentTimestamp(),
+        }),
+      })
+
+      if (response.ok) {
+        setEmailSent(true)
+      }
+    } catch {
+      // Silently fail - don't block user experience
+    } finally {
+      setSendingEmail(false)
+    }
   }
 
   const reset = () => {
     setSubmitted(false)
     setRegisteredUser(null)
+    setEmailSent(false)
+    setSendingEmail(false)
     setForm({
       fullName: '', phone: '', email: '', address: '', mapPinUrl: '',
       dayTime: '', source: '', remarks: '',
@@ -137,11 +190,29 @@ export default function RegisterPage() {
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copied!' : 'Copy Reference ID'}
           </button>
+
+          {/* Send registration details to admin via Formspree */}
+          {!emailSent ? (
+            <button
+              onClick={sendToAdmin}
+              disabled={sendingEmail}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#d97706] text-white rounded-lg text-sm font-medium hover:bg-[#b45309] transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-4 h-4" />
+              {sendingEmail ? 'Sending...' : 'Send my details to the admin'}
+            </button>
+          ) : (
+            <div className="flex items-center justify-center gap-2 px-4 py-3 bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg text-sm text-[#16a34a] font-medium mb-4">
+              <Check className="w-4 h-4" />
+              Details sent to admin successfully!
+            </div>
+          )}
+
           <p className="text-sm text-[#d97706] font-medium mb-2">
             Please take a screenshot of this page for your records.
           </p>
           <p className="text-xs text-[#6b7280] mb-6">
-            We'll send a confirmation to your email shortly.
+            We&apos;ll send a confirmation to your email shortly.
           </p>
           <button onClick={reset} className="text-sm text-[#16a34a] hover:underline">
             Register Another Person
@@ -156,6 +227,17 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f9fafb] py-12 px-4">
       <div className="max-w-xl mx-auto">
+        {/* Demo banner - explains that data is stored locally */}
+        <div className="mb-4 bg-[#fefce8] border border-[#fde047] rounded-lg p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-[#ca8a04] shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-[#854d0e]">Demo Notice</p>
+            <p className="text-sm text-[#a16207]">
+              This is a Student BIZ demo project. Your registration will be sent to our team via email.
+            </p>
+          </div>
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
