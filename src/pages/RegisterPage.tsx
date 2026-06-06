@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { sendNotification, getCurrentTimestamp } from '@/lib/notifications'
+import { storeRegistration } from '@/lib/supabase'
 import type { UserRole } from '@/lib/auth'
 import type { AuthUser } from '@/lib/auth'
 
@@ -90,6 +91,11 @@ export default function RegisterPage() {
         email: user.email,
         details: `Role: ${user.role} | Ref: ${user.refNumber} | Address: ${user.address} | Source: ${user.source || 'N/A'}`,
         timestamp: getCurrentTimestamp(),
+      })
+
+      // Store in shared cloud database so it appears in admin panel across ALL devices
+      storeRegistration(user).catch(() => {
+        // Cloud storage is best-effort; Formspree email is the primary notification
       })
     }
 

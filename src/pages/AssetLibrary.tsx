@@ -47,8 +47,14 @@ const FOLDERS: AssetFolder[] = [
   {
     id: 'videos',
     name: 'Videos',
-    count: 3,
-    files: ['/syscycl-empathy-video.mp4', '/syscycl-instagram-reel.mp4', '/innovation-video.mp4'],
+    count: 5,
+    files: [
+      '/syscycl-teaser-v1-final.mp4',
+      '/syscycl-teaser-v3-final.mp4',
+      '/syscycl-empathy-video.mp4',
+      '/syscycl-instagram-reel.mp4',
+      '/innovation-video.mp4',
+    ],
   },
   {
     id: 'qr-codes',
