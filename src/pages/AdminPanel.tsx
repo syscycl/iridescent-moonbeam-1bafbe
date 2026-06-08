@@ -410,7 +410,9 @@ export default function AdminPanel() {
                   type="text"
                   value={newReg.source}
                   onChange={(e) => setNewReg({ ...newReg, source: e.target.value })}
-                                  />
+                  placeholder="e.g., Instagram, Friend"
+                  className="w-full px-3 py-2 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]"
+                />
               </div>
             </div>
             <button
