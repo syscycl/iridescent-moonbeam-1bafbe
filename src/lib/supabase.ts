@@ -3,19 +3,11 @@
 // All registrations sync in real-time across all devices
 // ============================================================
 
-// INSTRUCTIONS TO CONNECT:
-// 1. Go to https://supabase.com and create a free account
-// 2. Create a new project (takes 2 minutes)
-// 3. Go to Project Settings → API
-// 4. Copy the "Project URL" and paste below as SUPABASE_URL
-// 5. Copy the "anon public" API key and paste below as SUPABASE_ANON_KEY
-// 6. In Supabase, go to Table Editor → New Table
-//    - Table name: registrations
-//    - Columns: id (uuid, primary), full_name (text), phone (text), email (text), address (text), role (text), ref_number (text), source (text), created_at (timestampz)
-// 7. Done! All registrations now sync automatically.
+// Supabase Cloud Database - Connected for automatic cross-device sync
+// All registrations are stored here and appear in the admin panel instantly
 
-const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE'     // Replace with your Supabase URL
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY' // Replace with your anon key
+const SUPABASE_URL = 'https://xyInngfgtyxuqgxffzyf.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5bG5uZ2ZndHl4dXFneGZmenlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NTU0MjAsImV4cCI6MjA2NjMzMTQyMH0.Jpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5bG5uZ2ZndHl4dXFneGZmenlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NTU0MjAsImV4cCI6MjA2NjMzMTQyMH0'
 
 // For now, use localStorage as fallback + Formspree email notifications
 // Once Supabase is connected, registrations sync across all devices automatically
@@ -28,10 +20,17 @@ interface SupabaseConfig {
 }
 
 function getConfig(): SupabaseConfig | null {
-  const url = localStorage.getItem('syscycl_supabase_url') || SUPABASE_URL
-  const key = localStorage.getItem('syscycl_supabase_key') || SUPABASE_ANON_KEY
+  // Use hardcoded credentials (primary) or localStorage override (optional)
+  const url = SUPABASE_URL
+  const key = SUPABASE_ANON_KEY
   if (url && key && !url.includes('YOUR_')) {
     return { url, key }
+  }
+  // Fallback to localStorage if hardcoded values are not set
+  const lsUrl = localStorage.getItem('syscycl_supabase_url')
+  const lsKey = localStorage.getItem('syscycl_supabase_key')
+  if (lsUrl && lsKey) {
+    return { url: lsUrl, key: lsKey }
   }
   return null
 }
