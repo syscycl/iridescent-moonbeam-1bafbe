@@ -370,3 +370,9 @@ export default function Home() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ duration: 0.5 }}>
             <h2 className="text-[30px] font-semibold text-[#111827] mb-2">Get In Touch</h2>
             <p className="text-[#6b7280] mb-
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
