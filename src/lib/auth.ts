@@ -53,6 +53,14 @@ export function registerUser(
   }
   users.push(newUser)
   localStorage.setItem('syscycl_users', JSON.stringify(users))
+
+  // Auto-increment live ticker counters for registrations
+  if (data.role !== 'admin') {
+    import('./ticker').then(({ trackRegistration }) => {
+      trackRegistration(data.role as 'household' | 'volunteer' | 'sponsor')
+    }).catch(() => {}) // Silently fail if ticker module unavailable
+  }
+
   return newUser
 }
 
@@ -86,7 +94,9 @@ export function seedAdminUser(): void {
 
 export function loginUser(email: string, password: string): AuthUser | null {
   seedAdminUser()
-  const user = getAllUsers().find((u) => u.email === email && u.password === password)
+  // Allow "admin" as a shortcut for tanisha@syscycl.com
+  const lookupEmail = email.toLowerCase() === 'admin' ? 'tanisha@syscycl.com' : email
+  const user = getAllUsers().find((u) => u.email === lookupEmail && u.password === password)
   if (!user) return null
   const session = {
     userId: user.id,
