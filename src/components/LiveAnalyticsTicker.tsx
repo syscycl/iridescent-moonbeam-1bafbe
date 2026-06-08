@@ -1,183 +1,116 @@
 import { useState, useEffect } from 'react'
 import { TrendingUp, Instagram, UserPlus, Users, Handshake } from 'lucide-react'
+import { getCounts } from '@/lib/ticker'
 
 // ============================================================
-// LIVE ANALYTICS TICKER
-// Tracks 5 real-time metrics via CountAPI (free, no auth needed)
-// Each metric auto-increments when the corresponding action happens
+// LIVE ANALYTICS TICKER — Fully Automated
+// Every counter updates automatically when real events happen
+// Labels are FULL ENGLISH TEXT — visible on all screen sizes
 // ============================================================
-
-const NS = 'syscycl-live-v2'
 
 interface Stats {
-  websiteVisits: number      // Auto: incremented on every page visit
-  instagramViews: number     // Auto: incremented when Instagram section is viewed
-  registrations: number      // Manual/Auto: incremented on each registration
-  volunteers: number         // Manual/Auto: incremented when volunteer registers
-  sponsors: number           // Manual/Auto: incremented when sponsor registers
+  websiteVisits: number
+  instagramViews: number
+  registrations: number
+  volunteers: number
+  sponsors: number
 }
 
-const STORAGE_KEY = 'syscycl-ticker-v2'
+const STORAGE_KEY = 'syscycl-ticker-display'
 
-function loadStored(): Stats | null {
+function loadStored(): Stats {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch { /* ignore */ }
-  return null
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+  } catch {
+    return { websiteVisits: 0, instagramViews: 0, registrations: 0, volunteers: 0, sponsors: 0 }
+  }
 }
 
 function saveStored(s: Stats) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s))
 }
 
-async function getCount(key: string): Promise<number | null> {
-  try {
-    const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${key}`, {
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return typeof data.count === 'number' ? data.count : null
-  } catch { return null }
-}
-
-async function incrementCount(key: string): Promise<number | null> {
-  try {
-    const res = await fetch(`https://api.counterapi.dev/v1/${NS}/${key}/up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return typeof data.count === 'number' ? data.count : null
-  } catch { return null }
-}
-
 export default function LiveAnalyticsTicker() {
-  const [stats, setStats] = useState<Stats>(() => loadStored() ?? {
-    websiteVisits: 0,
-    instagramViews: 0,
-    registrations: 0,
-    volunteers: 0,
-    sponsors: 0,
-  })
+  const [stats, setStats] = useState<Stats>(loadStored)
 
   // Count this visit (once per session)
   useEffect(() => {
-    if (sessionStorage.getItem('syscycl-counted')) return
-    sessionStorage.setItem('syscycl-counted', 'true')
+    if (sessionStorage.getItem('syscycl-visit-counted')) return
+    sessionStorage.setItem('syscycl-visit-counted', 'true')
 
-    incrementCount('websiteVisits').then((c) => {
-      if (c !== null) {
-        setStats(prev => {
-          const u = { ...prev, websiteVisits: c }
-          saveStored(u)
-          return u
-        })
-      }
-    })
+    fetch('https://api.counterapi.dev/v1/syscycl-live-v2/websiteVisits/up', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    }).catch(() => {})
   }, [])
 
-  // Refresh all counters every 30 seconds
+  // Refresh all counters every 15 seconds
   useEffect(() => {
     async function refresh() {
-      const [v, i, r, vl, s] = await Promise.all([
-        getCount('websiteVisits'),
-        getCount('instagramViews'),
-        getCount('registrations'),
-        getCount('volunteers'),
-        getCount('sponsors'),
-      ])
-      setStats(prev => {
-        const u: Stats = {
-          websiteVisits: v ?? prev.websiteVisits,
-          instagramViews: i ?? prev.instagramViews,
-          registrations: r ?? prev.registrations,
-          volunteers: vl ?? prev.volunteers,
-          sponsors: s ?? prev.sponsors,
-        }
-        saveStored(u)
-        return u
-      })
+      const counts = await getCounts()
+      setStats(counts)
+      saveStored(counts)
     }
     refresh()
-    const t = setInterval(refresh, 30000)
+    const t = setInterval(refresh, 15000)
     return () => clearInterval(t)
   }, [])
 
   const items = [
-    {
-      icon: TrendingUp,
-      label: 'Website Visits',
-      value: stats.websiteVisits,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/20',
-    },
-    {
-      icon: Instagram,
-      label: 'Instagram Reach',
-      value: stats.instagramViews,
-      color: 'text-pink-400',
-      bg: 'bg-pink-500/20',
-    },
-    {
-      icon: UserPlus,
-      label: 'Registrations',
-      value: stats.registrations,
-      color: 'text-green-400',
-      bg: 'bg-green-500/20',
-    },
-    {
-      icon: Users,
-      label: 'Volunteers',
-      value: stats.volunteers,
-      color: 'text-orange-400',
-      bg: 'bg-orange-500/20',
-    },
-    {
-      icon: Handshake,
-      label: 'Sponsors',
-      value: stats.sponsors,
-      color: 'text-purple-400',
-      bg: 'bg-purple-500/20',
-    },
+    { icon: TrendingUp, label: 'Website Visits', value: stats.websiteVisits, color: 'text-blue-300' },
+    { icon: Instagram, label: 'Instagram Reach', value: stats.instagramViews, color: 'text-pink-300' },
+    { icon: UserPlus, label: 'Registrations', value: stats.registrations, color: 'text-green-300' },
+    { icon: Users, label: 'Volunteers', value: stats.volunteers, color: 'text-orange-300' },
+    { icon: Handshake, label: 'Sponsors', value: stats.sponsors, color: 'text-purple-300' },
   ]
 
   return (
-    <div className="bg-gradient-to-r from-green-900 via-green-800 to-green-900 text-white py-2.5">
-      <div className="max-w-6xl mx-auto px-3">
-        {/* Desktop: horizontal row */}
-        <div className="hidden sm:flex items-center justify-center gap-4 lg:gap-6">
+    <div className="bg-gradient-to-r from-green-900 via-green-800 to-green-900 text-white py-3">
+      <div className="max-w-6xl mx-auto px-4">
+        {/* Desktop: full labels always visible */}
+        <div className="hidden md:flex items-center justify-center gap-5">
           {items.map((item) => (
-            <div
-              key={item.label}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${item.bg}`}
-              title={item.label}
-            >
-              <item.icon className={`w-3.5 h-3.5 ${item.color} flex-shrink-0`} />
-              <span className="text-green-200 text-[11px] hidden lg:inline whitespace-nowrap">{item.label}:</span>
-              <span className="font-bold tabular-nums text-xs">{item.value.toLocaleString()}</span>
+            <div key={item.label} className="flex items-center gap-2">
+              <item.icon className={`w-4 h-4 ${item.color}`} />
+              <span className="text-green-200 text-sm whitespace-nowrap">{item.label}</span>
+              <span className="font-bold tabular-nums text-base">{item.value.toLocaleString()}</span>
             </div>
           ))}
-          <span className="text-green-400 text-[10px] ml-1 animate-pulse">Live</span>
+          <span className="flex items-center gap-1 ml-2">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-green-400 text-xs font-medium">Live</span>
+          </span>
         </div>
 
-        {/* Mobile: scrolling ticker */}
-        <div className="sm:hidden flex items-center gap-3 overflow-x-auto scrollbar-hide">
+        {/* Tablet: compact with labels */}
+        <div className="hidden sm:flex md:hidden items-center justify-center gap-3 flex-wrap">
           {items.map((item) => (
-            <div
-              key={item.label}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${item.bg} flex-shrink-0`}
-            >
-              <item.icon className={`w-3 h-3 ${item.color}`} />
-              <span className="text-green-200 text-[10px]">{item.label}</span>
-              <span className="font-bold tabular-nums text-[11px]">{item.value.toLocaleString()}</span>
+            <div key={item.label} className="flex items-center gap-1.5">
+              <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
+              <span className="text-green-200 text-xs">{item.label}</span>
+              <span className="font-bold tabular-nums text-sm">{item.value.toLocaleString()}</span>
             </div>
           ))}
-          <span className="text-green-400 text-[9px] flex-shrink-0 animate-pulse">Live</span>
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-green-400 text-[10px]">Live</span>
+          </span>
+        </div>
+
+        {/* Mobile: scrolling with clear labels */}
+        <div className="sm:hidden flex items-center gap-3 overflow-x-auto">
+          {items.map((item) => (
+            <div key={item.label} className="flex items-center gap-1.5 flex-shrink-0 bg-white/10 rounded-full px-3 py-1">
+              <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
+              <span className="text-green-200 text-xs">{item.label}</span>
+              <span className="font-bold tabular-nums text-sm">{item.value.toLocaleString()}</span>
+            </div>
+          ))}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-green-400 text-[10px]">Live</span>
+          </div>
         </div>
       </div>
     </div>
