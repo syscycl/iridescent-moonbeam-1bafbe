@@ -369,7 +369,131 @@ export default function Home() {
         <div className="max-w-lg mx-auto text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ duration: 0.5 }}>
             <h2 className="text-[30px] font-semibold text-[#111827] mb-2">Get In Touch</h2>
-            <p className="text-[#6b7280] mb-
+                        <p className="text-[#6b7280] mb-8">Have questions? We&apos;d love to hear from you.</p>
+          </motion.div>
+
+          <motion.div
+            ref={instagramRef}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-6 bg-white rounded-xl border border-[#e5e7eb] p-6 shadow-sm text-left space-y-4"
+          >
+            <div className="flex items-center gap-3">
+              <Mail className="w-5 h-5 text-[#16a34a]" />
+              <div>
+                <p className="text-sm font-medium text-[#111827]">Email</p>
+                <a href="mailto:manager@syscycl.com" className="text-sm text-[#374151] hover:text-[#16a34a]">manager@syscycl.com</a>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <MapPin className="w-5 h-5 text-[#16a34a]" />
+              <div>
+                <p className="text-sm font-medium text-[#111827]">Location</p>
+                <p className="text-sm text-[#374151]">Brantford, Ontario, Canada</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Instagram className="w-5 h-5 text-[#16a34a]" />
+              <div>
+                <p className="text-sm font-medium text-[#111827]">Instagram</p>
+                <a href="https://instagram.com/syscycl" target="_blank" rel="noopener noreferrer" className="text-sm text-[#374151] hover:text-[#16a34a]">@syscycl</a>
+              </div>
+            </div>
+            <p className="text-xs text-[#6b7280] pt-2 border-t border-[#e5e7eb]">
+              For privacy, we don&apos;t display phone numbers publicly. Please use our chat form or email to reach us.
+            </p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="mt-6">
+            <button
+              onClick={() => navigate('/chat')}
+              className="px-6 py-3 bg-[#16a34a] text-white rounded-lg font-medium hover:bg-[#15803d] transition-colors"
+            >
+              Send us a Message
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Section: Research & Education */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#f0fdf4] to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ duration: 0.5 }}>
+              <div className="inline-flex items-center gap-2 bg-[#16a34a]/10 border border-[#16a34a]/20 rounded-full px-4 py-1.5 mb-4">
+                <BookOpen className="w-4 h-4 text-[#16a34a]" />
+                <span className="text-sm text-[#15803d] font-medium">Free Educational Resource</span>
+              </div>
+              <h2 className="text-[30px] font-semibold text-[#111827] mb-4 leading-tight">The 450-Year Legacy: The Environmental Impact of PET Bottles</h2>
+              <p className="text-[#374151] leading-relaxed mb-4">
+                A plastic bottle tossed today will still be sitting in a landfill in the year 2476. This student research paper explores the long-term environmental consequences of PET plastic waste and what communities can do about it.
+              </p>
+              <div className="space-y-3 mb-6">
+                {[
+                  'The science behind why PET bottles take 450 years to decompose',
+                  'How discarded bottles impact Brantford soil and water systems',
+                  'The connection between microplastics and human health',
+                  'Community action: What students and households can do',
+                  'Second research paper: Microplastics and the food chain',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#16a34a] mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-[#374151]">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => navigate('/research')} className="px-5 py-2.5 bg-[#16a34a] text-white rounded-lg font-medium hover:bg-[#15803d] transition-colors flex items-center gap-2">
+                  View Research Papers
+                </button>
+                <button onClick={() => navigate('/research')} className="px-5 py-2.5 bg-white text-[#374151] border border-[#e5e7eb] rounded-lg font-medium hover:bg-[#f9fafb] transition-colors">
+                  Read & Share Infographics
+                </button>
+              </div>
+              <p className="text-xs text-[#9ca3af] mt-3">An Assumption College School (Student BIZ) Initiative. Download is free for educational purposes.</p>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="relative">
+              <div className="bg-white rounded-xl border border-[#e5e7eb] shadow-lg overflow-hidden">
+                <div className="bg-[#111827] px-6 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#16a34a] flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium text-sm">Syscycl Research Series</p>
+                      <p className="text-white/60 text-xs">Environmental Studies</p>
+                    </div>
+                  </div>
+                  <span className="text-[#16a34a] text-xs font-medium bg-[#16a34a]/20 px-2 py-1 rounded">FREE</span>
+                </div>
+                <div className="p-6 space-y-4">
+                  {[
+                    { label: 'Paper #1', value: 'The 450-Year Legacy', h: true },
+                    { label: 'Focus', value: 'Environmental impact of PET' },
+                    { label: 'Decomposition time', value: '450 years', h: true },
+                    { label: 'Paper #2', value: 'Microplastics Threat', h: true },
+                    { label: 'Focus', value: 'Microplastics in food chain' },
+                  ].map((row) => (
+                    <div key={row.label} className="flex items-center justify-between py-2 border-b border-[#e5e7eb] last:border-0">
+                      <span className="text-sm text-[#6b7280]">{row.label}</span>
+                      <span className={`text-sm font-semibold ${row.h ? 'text-[#16a34a]' : 'text-[#111827]'}`}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-6 py-3 bg-[#f9fafb] border-t border-[#e5e7eb]">
+                  <p className="text-xs text-[#6b7280] text-center">Purely environmental focus — no commercial or profit content</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
           </div>
         </div>
       </section>
