@@ -369,7 +369,7 @@ export default function Home() {
         <div className="max-w-lg mx-auto text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ duration: 0.5 }}>
             <h2 className="text-[30px] font-semibold text-[#111827] mb-2">Get In Touch</h2>
-                        <p className="text-[#6b7280] mb-8">Have questions? We&apos;d love to hear from you.</p>
+            <p className="text-[#6b7280] mb-8">Have questions? We&apos;d love to hear from you.</p>
           </motion.div>
 
           <motion.div
@@ -377,7 +377,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-6 bg-white rounded-xl border border-[#e5e7eb] p-6 shadow-sm text-left space-y-4"
+            className="bg-white rounded-xl border border-[#e5e7eb] p-6 shadow-sm text-left space-y-4"
           >
             <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-[#16a34a]" />
@@ -487,13 +487,6 @@ export default function Home() {
                 </div>
               </div>
             </motion.div>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
-}
-
           </div>
         </div>
       </section>
