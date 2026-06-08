@@ -1,10 +1,11 @@
-import { useState } from 'react'
+  import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, Phone, Mail, MapPin, Calendar, HelpCircle,
   MessageSquare, CheckCircle2, Home, HeartHandshake,
   Building2, Copy, Check, AlertTriangle, Send,
+  Globe, Navigation, Clock,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { sendNotification, getCurrentTimestamp } from '@/lib/notifications'
@@ -14,7 +15,55 @@ import type { AuthUser } from '@/lib/auth'
 
 const SOURCE_OPTIONS = ['Instagram', 'Facebook', 'Friend', 'Flyer', 'Website', 'Other']
 
-// Formspree endpoint for sending registration details to admin
+// Major streets in Brantford, Ontario
+const BRANTFORD_STREETS = [
+  'Colborne Street',
+  'Dalhousie Street',
+  'Market Street',
+  'Queen Street',
+  'King George Road',
+  'North Park Street',
+  'West Street',
+  'East Street',
+  'Morrell Street',
+  'Brant Avenue',
+  'Charing Cross Street',
+  'Erie Avenue',
+  'Grand River Avenue',
+  'St. Paul Avenue',
+  'Wellington Street',
+  'Icomm Drive',
+  'Shellard Lane',
+  'Gilkison Street',
+  'Richmond Street',
+  'Darling Street',
+  'Nelson Street',
+  'Cayuga Street',
+  'Tuscarora Street',
+  'Seneca Street',
+  'Oneida Street',
+  'Onondaga Street',
+  'Mohawk Street',
+  'Tomahawk Drive',
+  'Birkdale Crescent',
+  'Dover Court',
+  'Other (enter manually)',
+]
+
+// Country codes for phone
+const COUNTRY_CODES = [
+  { code: '+1', country: 'Canada', flag: 'CA' },
+  { code: '+1', country: 'USA', flag: 'US' },
+  { code: '+91', country: 'India', flag: 'IN' },
+  { code: '+44', country: 'UK', flag: 'GB' },
+  { code: '+92', country: 'Pakistan', flag: 'PK' },
+  { code: '+971', country: 'UAE', flag: 'AE' },
+  { code: '+86', country: 'China', flag: 'CN' },
+  { code: '+63', country: 'Philippines', flag: 'PH' },
+  { code: '+27', country: 'South Africa', flag: 'ZA' },
+  { code: '+61', country: 'Australia', flag: 'AU' },
+]
+
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xnjyngrb'
 
 export default function RegisterPage() {
@@ -28,13 +77,16 @@ export default function RegisterPage() {
   const [registeredUser, setRegisteredUser] = useState<AuthUser | null>(null)
   const [copied, setCopied] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  // Track whether the user has sent their details to the admin via email
   const [emailSent, setEmailSent] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
+  const [showMapHelper, setShowMapHelper] = useState(false)
+  const [streetDropdown, setStreetDropdown] = useState('')
+  const [streetManual, setStreetManual] = useState('')
+  const [countryCode, setCountryCode] = useState('+1')
 
   const [form, setForm] = useState({
     fullName: '', phone: '', email: '',
-    address: '', mapPinUrl: '', dayTime: '', source: '', remarks: '',
+    address: '', mapPinUrl: '', pickupDate: '', pickupTime: '', dayTime: '', source: '', remarks: '',
     availableDays: [] as string[], tShirtSize: '', emergencyContact: '',
     sponsorType: '', contributionInterest: '', sponsorMessage: '',
   })
@@ -42,6 +94,15 @@ export default function RegisterPage() {
   const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
     setErrors((prev) => { const n = { ...prev }; delete n[field]; return n })
+  }
+
+  const handleStreetChange = (value: string) => {
+    setStreetDropdown(value)
+    if (value === 'Other (enter manually)') {
+      update('address', streetManual)
+    } else {
+      update('address', value)
+    }
   }
 
   const toggleDay = (day: string) => {
@@ -56,17 +117,20 @@ export default function RegisterPage() {
   const validate = (): boolean => {
     const e: Record<string, string> = {}
     if (form.fullName.length < 2) e.fullName = 'Name is required'
-    if (form.phone.length < 10) e.phone = 'Phone is required'
-    if (!form.address) e.address = 'Address is required'
+    if (form.phone.length < 7) e.phone = 'Valid phone number is required'
+    if (!form.address || form.address === 'Other (enter manually)') e.address = 'Street address is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
   const handleSubmit = () => {
     if (!validate()) return
+    const fullPhone = `${countryCode} ${form.phone}`
     const userData: any = {
-      role, fullName: form.fullName, phone: form.phone, email: form.email || '',
+      role, fullName: form.fullName, phone: fullPhone, email: form.email || '',
       address: form.address, mapPinUrl: form.mapPinUrl || undefined,
+      pickupDate: form.pickupDate || undefined,
+      pickupTime: form.pickupTime || undefined,
       dayTime: form.dayTime || undefined, source: form.source || undefined,
       remarks: form.remarks || undefined,
     }
@@ -83,20 +147,15 @@ export default function RegisterPage() {
     const user = register(userData)
 
     if (user) {
-      // Send notification to Tanisha via Formspree using direct import
       sendNotification({
         type: user.role === 'sponsor' ? 'sponsor' : 'registration',
         name: user.fullName,
-        phone: user.phone,
+        phone: fullPhone,
         email: user.email,
-        details: `Role: ${user.role} | Ref: ${user.refNumber} | Address: ${user.address} | Source: ${user.source || 'N/A'}`,
+        details: `Role: ${user.role} | Ref: ${user.refNumber} | Address: ${user.address} | Pickup Date: ${form.pickupDate || 'Not set'} | Source: ${user.source || 'N/A'}`,
         timestamp: getCurrentTimestamp(),
       })
-
-      // Store in shared cloud database so it appears in admin panel across ALL devices
-      storeRegistration(user).catch(() => {
-        // Cloud storage is best-effort; Formspree email is the primary notification
-      })
+      storeRegistration(user).catch(() => {})
     }
 
     setRegisteredUser(user)
@@ -104,8 +163,6 @@ export default function RegisterPage() {
     setEmailSent(false)
   }
 
-  // Send the full registration data to admin via Formspree.
-  // This ensures the admin receives an email even though localStorage is per-device.
   const sendToAdmin = async () => {
     if (!registeredUser) return
     setSendingEmail(true)
@@ -125,8 +182,9 @@ export default function RegisterPage() {
           phone: registeredUser.phone,
           email: registeredUser.email || 'Not provided',
           address: registeredUser.address,
+          pickupDate: form.pickupDate || 'Not provided',
+          pickupTime: form.pickupTime || 'Not provided',
           mapPinUrl: form.mapPinUrl || 'Not provided',
-          dayTime: form.dayTime || 'Not provided',
           source: form.source || 'Not provided',
           remarks: form.remarks || 'None',
           availableDays: form.availableDays.length > 0 ? form.availableDays.join(', ') : 'N/A',
@@ -138,29 +196,30 @@ export default function RegisterPage() {
           timestamp: getCurrentTimestamp(),
         }),
       })
-
-      if (response.ok) {
-        setEmailSent(true)
-      }
-    } catch {
-      // Silently fail - don't block user experience
-    } finally {
-      setSendingEmail(false)
-    }
+      if (response.ok) setEmailSent(true)
+    } catch { /* silently fail */ }
+    finally { setSendingEmail(false) }
   }
-
-  const reset = () => {
+    const reset = () => {
     setSubmitted(false)
     setRegisteredUser(null)
     setEmailSent(false)
     setSendingEmail(false)
+    setStreetDropdown('')
+    setStreetManual('')
+    setShowMapHelper(false)
     setForm({
       fullName: '', phone: '', email: '', address: '', mapPinUrl: '',
-      dayTime: '', source: '', remarks: '',
+      pickupDate: '', pickupTime: '', dayTime: '', source: '', remarks: '',
       availableDays: [], tShirtSize: '', emergencyContact: '',
       sponsorType: '', contributionInterest: '', sponsorMessage: '',
     })
     setErrors({})
+  }
+
+  const openGoogleMaps = () => {
+    const query = form.address ? encodeURIComponent(form.address + ', Brantford, Ontario') : 'Brantford, Ontario'
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank')
   }
 
   const roleConfig: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -186,18 +245,13 @@ export default function RegisterPage() {
             <p className="text-3xl font-mono font-bold text-[#16a34a]">{registeredUser.refNumber}</p>
           </div>
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(registeredUser.refNumber)
-              setCopied(true)
-              setTimeout(() => setCopied(false), 2000)
-            }}
+            onClick={() => { navigator.clipboard.writeText(registeredUser.refNumber); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#16a34a] text-white rounded-lg text-sm font-medium hover:bg-[#15803d] transition-colors mb-4"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copied!' : 'Copy Reference ID'}
           </button>
 
-          {/* Send registration details to admin via Formspree */}
           {!emailSent ? (
             <button
               onClick={sendToAdmin}
@@ -214,61 +268,38 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <p className="text-sm text-[#d97706] font-medium mb-2">
-            Please take a screenshot of this page for your records.
-          </p>
-          <p className="text-xs text-[#6b7280] mb-6">
-            We&apos;ll send a confirmation to your email shortly.
-          </p>
-          <button onClick={reset} className="text-sm text-[#16a34a] hover:underline">
-            Register Another Person
-          </button>
+          <p className="text-sm text-[#d97706] font-medium mb-2">Please take a screenshot of this page for your records.</p>
+          <p className="text-xs text-[#6b7280] mb-6">We&apos;ll send a confirmation to your email shortly.</p>
+          <button onClick={reset} className="text-sm text-[#16a34a] hover:underline">Register Another Person</button>
         </motion.div>
       </div>
     )
   }
 
-
-
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#f9fafb] py-12 px-4">
       <div className="max-w-xl mx-auto">
-        {/* Demo banner - explains that data is stored locally */}
+        {/* Demo banner */}
         <div className="mb-4 bg-[#fefce8] border border-[#fde047] rounded-lg p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-[#ca8a04] shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-[#854d0e]">Demo Notice</p>
-            <p className="text-sm text-[#a16207]">
-              This is a Student BIZ demo project. Your registration will be sent to our team via email.
-            </p>
+            <p className="text-sm text-[#a16207]">This is a Student BIZ demo project. Your registration will be sent to our team via email.</p>
           </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl border border-[#e5e7eb] shadow-sm p-6 md:p-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-[#e5e7eb] shadow-sm p-6 md:p-8">
           <h1 className="text-2xl font-semibold text-[#111827] text-center mb-2">Join Syscycl</h1>
-          <p className="text-sm text-[#6b7280] text-center mb-6">
-            An Assumption College School (Student BIZ) Initiative
-          </p>
+          <p className="text-sm text-[#6b7280] text-center mb-6">An Assumption College School (Student BIZ) Initiative</p>
 
           {/* Role selector */}
           <div className="flex gap-2 mb-6">
             {Object.entries(roleConfig).map(([key, c]) => {
               const I = c.icon
               return (
-                <button
-                  key={key}
-                  onClick={() => setRole(key as UserRole)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all border ${
-                    role === key
-                      ? 'text-white border-transparent'
-                      : 'bg-white text-[#6b7280] border-[#e5e7eb] hover:border-[#d1d5db]'
-                  }`}
-                  style={role === key ? { backgroundColor: c.color } : {}}
-                >
+                <button key={key} onClick={() => setRole(key as UserRole)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all border ${role === key ? 'text-white border-transparent' : 'bg-white text-[#6b7280] border-[#e5e7eb] hover:border-[#d1d5db]'}`}
+                  style={role === key ? { backgroundColor: c.color } : {}}>
                   <I className="w-4 h-4" />
                   {c.label}
                 </button>
@@ -278,6 +309,8 @@ export default function RegisterPage() {
 
           {/* Form fields */}
           <div className="space-y-4">
+
+            {/* Full Name */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
                 <User className="w-4 h-4 text-[#9ca3af]" /> Full Name <span className="text-red-500">*</span>
@@ -287,32 +320,103 @@ export default function RegisterPage() {
               {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName}</p>}
             </div>
 
+            {/* Street Address — Dropdown */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
                 <MapPin className="w-4 h-4 text-[#9ca3af]" /> Street Address <span className="text-red-500">*</span>
               </label>
-              <input type="text" value={form.address} onChange={(e) => update('address', e.target.value)} placeholder="Your street address"
-                className={`w-full px-4 py-2.5 rounded-lg border ${errors.address ? 'border-red-300' : 'border-[#e5e7eb]'} text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]`} />
+              <select
+                value={streetDropdown}
+                onChange={(e) => handleStreetChange(e.target.value)}
+                className={`w-full px-4 py-2.5 rounded-lg border ${errors.address ? 'border-red-300' : 'border-[#e5e7eb]'} text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a] bg-white mb-2`}
+              >
+                <option value="">Select a street in Brantford</option>
+                {BRANTFORD_STREETS.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              {streetDropdown === 'Other (enter manually)' && (
+                <input
+                  type="text"
+                  value={streetManual}
+                  onChange={(e) => { setStreetManual(e.target.value); update('address', e.target.value) }}
+                  placeholder="Enter your street address"
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]"
+                />
+              )}
+              {form.address && form.address !== 'Other (enter manually)' && (
+                <p className="text-xs text-[#16a34a] mt-1">Selected: {form.address}</p>
+              )}
               {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
             </div>
 
+            {/* Google Maps Pin Helper */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
-                <MapPin className="w-4 h-4 text-[#9ca3af]" /> Location Map URL
+                <Navigation className="w-4 h-4 text-[#9ca3af]" /> Pin Your Location on Map
               </label>
-              <input type="url" value={form.mapPinUrl} onChange={(e) => update('mapPinUrl', e.target.value)} placeholder="Google Maps or Apple Maps pin URL"
-                className="w-full px-4 py-2.5 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]" />
-            </div>
-
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={form.mapPinUrl}
+                  onChange={(e) => update('mapPinUrl', e.target.value)}
+                  placeholder="Paste Google Maps link after pinning"
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMapHelper(!showMapHelper)}
+                  className="px-3 py-2.5 bg-[#f3f4f6] text-[#374151] rounded-lg text-sm hover:bg-[#e5e7eb] transition-colors whitespace-nowrap"
+                >
+                  How to Pin
+                </button>
+              </div>
+              {showMapHelper && (
+                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+                  <p className="font-medium mb-1">To pin your house on Google Maps:</p>
+                  <ol className="list-decimal list-inside space-y-0.5">
+                    <li>Click &quot;Open Google Maps&quot; below</li>
+                    <li>Search for your address in Brantford</li>
+                    <li>Right-click on your house → &quot;What&apos;s here?&quot;</li>
+                    <li>Copy the URL from the address bar</li>
+                    <li>Paste it in the field above</li>
+                  </ol>
+                  <button
+                    type="button"
+                    onClick={openGoogleMaps}
+                    className="mt-2 px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-1"
+                  >
+                    <Globe className="w-3 h-3" />
+                    Open Google Maps
+                  </button>
+                </div>
+              )}
+            </div>            {/* Phone with Country Code */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
                 <Phone className="w-4 h-4 text-[#9ca3af]" /> Phone Number <span className="text-red-500">*</span>
               </label>
-              <input type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="Your phone number"
-                className={`w-full px-4 py-2.5 rounded-lg border ${errors.phone ? 'border-red-300' : 'border-[#e5e7eb]'} text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]`} />
+              <div className="flex gap-2">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="w-32 px-3 py-2.5 rounded-lg border border-[#e5e7eb] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 flex-shrink-0"
+                >
+                  {COUNTRY_CODES.map((c) => (
+                    <option key={`${c.code}-${c.country}`} value={c.code}>{c.code} {c.country}</option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => update('phone', e.target.value)}
+                  placeholder="(226) 555-0123"
+                  className={`flex-1 px-4 py-2.5 rounded-lg border ${errors.phone ? 'border-red-300' : 'border-[#e5e7eb]'} text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]`}
+                />
+              </div>
+              <p className="text-xs text-[#9ca3af] mt-1">Selected: {countryCode}</p>
               {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
 
+            {/* Email */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
                 <Mail className="w-4 h-4 text-[#9ca3af]" /> Email Address
@@ -321,14 +425,40 @@ export default function RegisterPage() {
                 className="w-full px-4 py-2.5 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]" />
             </div>
 
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
-                <Calendar className="w-4 h-4 text-[#9ca3af]" /> Preferred Day & Time
-              </label>
-              <input type="text" value={form.dayTime} onChange={(e) => update('dayTime', e.target.value)} placeholder="e.g., Tuesdays at 10 AM"
-                className="w-full px-4 py-2.5 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]" />
+            {/* Date of Pickup — Calendar */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
+                  <Calendar className="w-4 h-4 text-[#9ca3af]" /> Pickup Date
+                </label>
+                <input
+                  type="date"
+                  value={form.pickupDate}
+                  onChange={(e) => update('pickupDate', e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20 focus:border-[#16a34a]"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
+                  <Clock className="w-4 h-4 text-[#9ca3af]" /> Pickup Time
+                </label>
+                <select
+                  value={form.pickupTime}
+                  onChange={(e) => update('pickupTime', e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#e5e7eb] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20"
+                >
+                  <option value="">Select time</option>
+                  <option value="Morning (8-11 AM)">Morning (8-11 AM)</option>
+                  <option value="Afternoon (12-3 PM)">Afternoon (12-3 PM)</option>
+                  <option value="Evening (4-7 PM)">Evening (4-7 PM)</option>
+                  <option value="Weekend">Weekend</option>
+                  <option value="Anytime">Anytime</option>
+                </select>
+              </div>
             </div>
 
+            {/* How did you hear */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
                 <HelpCircle className="w-4 h-4 text-[#9ca3af]" /> How did you hear about us?
@@ -340,6 +470,7 @@ export default function RegisterPage() {
               </select>
             </div>
 
+            {/* Remarks */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-[#111827] mb-1.5">
                 <MessageSquare className="w-4 h-4 text-[#9ca3af]" /> Remarks / Comments
@@ -379,7 +510,7 @@ export default function RegisterPage() {
               )}
             </AnimatePresence>
 
-            {/* Sponsor-specific */}
+            {/* Sponsor-specific — NO meeting appointment date/time */}
             <AnimatePresence>
               {role === 'sponsor' && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 pt-2 border-t border-[#e5e7eb]">
