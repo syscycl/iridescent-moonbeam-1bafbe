@@ -409,4 +409,71 @@ export default function AdminPanel() {
                 <input
                   type="text"
                   value={newReg.source}
-                  onChange={(e) => setNewReg({ ...newReg, source: e
+                  onChange={(e) => setNewReg({ ...newReg, source: e.target.value })}
+                                  />
+              </div>
+            </div>
+            <button
+              onClick={handleManualAdd}
+              className="mt-4 px-5 py-2.5 bg-[#16a34a] text-white rounded-lg text-sm font-medium hover:bg-[#15803d] transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Save Registration
+            </button>
+            {addSuccess && (
+              <p className="mt-2 text-xs text-[#16a34a] font-medium">Registration added successfully!</p>
+            )}
+          </motion.div>
+        )}
+
+        <div className="bg-white rounded-xl border border-[#e5e7eb] shadow-sm overflow-hidden">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-8 text-[#9ca3af]">
+              <UserCheck className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="mb-1">No registrations yet</p>
+              <p className="text-xs max-w-md mx-auto">
+                When someone registers, you will receive an email at manager@syscycl.com.
+                Click "Connect Cloud DB" above for automatic sync across all devices.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-[#f9fafb]">
+                  <tr>
+                    <th className="text-left px-4 py-3 text-[#6b7280] font-medium">Ref ID</th>
+                    <th className="text-left px-4 py-3 text-[#6b7280] font-medium">Name</th>
+                    <th className="text-left px-4 py-3 text-[#6b7280] font-medium">Role</th>
+                    <th className="text-left px-4 py-3 text-[#6b7280] font-medium">Phone</th>
+                    <th className="text-left px-4 py-3 text-[#6b7280] font-medium">Email</th>
+                    <th className="text-left px-4 py-3 text-[#6b7280] font-medium">Address</th>
+                    <th className="text-left px-4 py-3 text-[#6b7280] font-medium">Source</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e5e7eb]">
+                  {filteredUsers.map((u) => (
+                    <tr key={u.id} className="hover:bg-[#f9fafb]">
+                      <td className="px-4 py-3 font-mono text-xs text-[#16a34a] font-semibold">{u.ref_number}</td>
+                      <td className="px-4 py-3 font-medium">{u.full_name}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                          u.role === 'household' ? 'bg-[#f0fdf4] text-[#16a34a]' :
+                          u.role === 'volunteer' ? 'bg-blue-50 text-blue-600' :
+                          'bg-amber-50 text-amber-600'
+                        }`}>{u.role}</span>
+                      </td>
+                      <td className="px-4 py-3 text-[#374151]">{u.phone || '—'}</td>
+                      <td className="px-4 py-3 text-[#6b7280]">{u.email || '—'}</td>
+                      <td className="px-4 py-3 text-[#374151] max-w-[150px] truncate">{u.address}</td>
+                      <td className="px-4 py-3 text-[#6b7280]">{u.source || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
