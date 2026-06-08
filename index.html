@@ -18,8 +18,6 @@
     <meta name="twitter:title" content="Happy World Environment Day - Join Syscycl!" />
     <meta name="twitter:description" content="Free door-to-door PET bottle recycling in Brantford. Student BIZ initiative." />
     <meta name="twitter:image" content="https://syscycl.com/world-environment-day-popup.jpg" />
-    <script type="module" crossorigin src="./assets/index-aZR95Dgi.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-VFPklb6P.css">
   </head>
   <body>
     <div id="root"></div>
@@ -31,7 +29,7 @@
 
         <!-- Animated mascot image with Ken Burns zoom (CSS only, works on ALL devices) -->
         <div class="wed-img-wrap">
-          <img src="./wed-mascot.jpg" alt="Syscycl World Environment Day" class="wed-img" />
+          <img src="/wed-mascot.jpg" alt="Syscycl World Environment Day" class="wed-img" />
           <div class="wed-vignette"></div>
         </div>
 
@@ -72,7 +70,7 @@
 
       /* Ken Burns animated image */
       .wed-img-wrap { position: absolute; inset: 0; z-index: 1; }
-      .wed-img { width: 100%; height: 100%; -o-object-fit: cover; object-fit: cover; display: block; animation: wedKenBurns 8s ease-out forwards; }
+      .wed-img { width: 100%; height: 100%; object-fit: cover; display: block; animation: wedKenBurns 8s ease-out forwards; }
       .wed-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%); z-index: 2; pointer-events: none; }
       @keyframes wedKenBurns { 0% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
@@ -150,5 +148,6 @@
       })();
     </script>
 
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
