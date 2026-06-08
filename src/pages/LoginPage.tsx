@@ -60,13 +60,13 @@ export default function LoginPage() {
           <div className="space-y-4">
             <div>
               <label className="flex items-center gap-1.5 text-sm font-medium text-[#374151] mb-1">
-                <Mail className="w-4 h-4" /> Email <span className="text-[#ef4444]">*</span>
+                <Mail className="w-4 h-4" /> Email or Username <span className="text-[#ef4444]">*</span>
               </label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="tanisha@syscycl.com or admin"
                 className="w-full px-3 py-2.5 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#16a34a]/20"
               />
             </div>
