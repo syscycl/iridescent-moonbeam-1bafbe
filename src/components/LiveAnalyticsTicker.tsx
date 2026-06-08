@@ -20,7 +20,14 @@ const STORAGE_KEY = 'syscycl-ticker-display'
 
 function loadStored(): Stats {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    return {
+      websiteVisits: stored.websiteVisits ?? 0,
+      instagramViews: stored.instagramViews ?? 0,
+      registrations: stored.registrations ?? 0,
+      volunteers: stored.volunteers ?? 0,
+      sponsors: stored.sponsors ?? 0,
+    }
   } catch {
     return { websiteVisits: 0, instagramViews: 0, registrations: 0, volunteers: 0, sponsors: 0 }
   }
