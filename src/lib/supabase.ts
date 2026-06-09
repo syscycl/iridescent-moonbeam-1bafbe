@@ -7,7 +7,7 @@
 // All registrations are stored here and appear in the admin panel instantly
 
 const SUPABASE_URL = 'https://xyInngfgtyxuqgxffzyf.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5bG5uZ2ZndHl4dXFneGZmenlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NTU0MjAsImV4cCI6MjA2NjMzMTQyMH0.Jpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5bG5uZ2ZndHl4dXFneGZmenlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3NTU0MjAsImV4cCI6MjA2NjMzMTQyMH0'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5bG5uZ2ZndHl4dXFneGZmenlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NjUyODcsImV4cCI6MjA5NjM0MTI4N30.fbMgeq3GrJRAwkW6Xwj-7ug9yW7hPKdFpZ5-w9pJtJQ'
 
 // For now, use localStorage as fallback + Formspree email notifications
 // Once Supabase is connected, registrations sync across all devices automatically
